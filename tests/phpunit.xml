@@ -1,0 +1,14 @@
+<phpunit colors="true"
+		 syntaxCheck="true"
+		 strict="true"
+		 bootstrap="bootstrap.php"
+		 >
+	<logging>
+		<log type="junit" target="./xunitlog.xml" logIncompleteSkipped="false"/>
+	</logging>
+	<testsuites>
+		<testsuite name="unit">
+			<directory>unit</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>
