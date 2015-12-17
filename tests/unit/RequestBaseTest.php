@@ -249,16 +249,27 @@ class RequestBaseTest extends PHPUnit_TestCase
 			$this->assertSame($request, $request->setArgument($key, $value));
 		}
 		
+		// Flatten arrays
+		$arguments_to_compare = array_map(function($element)
+		{
+			if (is_array($element))
+			{
+				return implode(',', $element);
+			}
+			
+			return $element;
+		}, $arguments);
+		
 		// Check arguments before executing
-		$this->assertArraysSameUnordered($arguments, $request->arguments());
+		$this->assertArraysSameUnordered($arguments_to_compare, $request->arguments());
 		
 		$request->execute();
 		
 		// Check arguments after executing
-		$this->assertArraysSameUnordered($arguments, $request->arguments());
+		$this->assertArraysSameUnordered($arguments_to_compare, $request->arguments());
 		
 		// Check sent arguments
-		$this->assertArraysSameUnordered($arguments, $request->sent_arguments);
+		$this->assertArraysSameUnordered($arguments_to_compare, $request->sent_arguments);
 	}
 	
 	public function provideSetArgument()
@@ -271,6 +282,14 @@ class RequestBaseTest extends PHPUnit_TestCase
 			array(array(
 				'item' => '2qgEU-6Kbdoy',
 				'account' => 'SLoMc-OaZNsy'
+			)),
+			array(array(
+					'test' => 'abcde,fghijk,uvwxyz', 
+					'account' => 'SLoMc-OaZNsy'
+			)),
+			array(array(
+					'test' => ['abcde', 'fghijk', 'uvwxyz'],
+					'account' => 'SLoMc-OaZNsy'
 			)),
 		);
 	}

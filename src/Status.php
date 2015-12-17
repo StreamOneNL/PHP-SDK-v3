@@ -267,9 +267,15 @@ class Status
 
 	/**
 	 * @var int
+	 *   The requested server role was not found
+	 */
+	 const SERVER_ROLE_NOT_FOUND = 134;
+
+	/**
+	 * @var int
 	 *   This server does not have this role
 	 */
-	 const SERVER_ROLE_NOT_ASSIGNED = 133;
+	 const SERVER_ROLE_NOT_ASSIGNED = 135;
 
 	/**
 	 * @var int
@@ -429,6 +435,12 @@ class Status
 
 	/**
 	 * @var int
+	 *   The requested livestream type was not found
+	 */
+	 const LIVESTREAM_TYPE_NOT_FOUND = 243;
+
+	/**
+	 * @var int
 	 *   The requested customer was not found
 	 */
 	 const CUSTOMER_NOT_FOUND = 250;
@@ -573,6 +585,12 @@ class Status
 
 	/**
 	 * @var int
+	 *   The username already exists
+	 */
+	 const USER_USERNAME_ALREADY_EXISTS = 316;
+
+	/**
+	 * @var int
 	 *   The requested schedule was not found
 	 */
 	 const SCHEDULE_NOT_FOUND = 320;
@@ -687,6 +705,12 @@ class Status
 
 	/**
 	 * @var int
+	 *   The profile group has an height that is not supported for interlaced output
+	 */
+	 const PROFILE_INVALID_HEIGHT_FOR_INTERLACED = 379;
+
+	/**
+	 * @var int
 	 *   The requested security profile was not found
 	 */
 	 const SECURITY_PROFILE_NOT_FOUND = 380;
@@ -756,4 +780,59 @@ class Status
 	 *   The record task has an invalid status
 	 */
 	 const RECORD_TASK_INVALID_STATUS = 411;
+
+	/**
+	 * @var int
+	 *   The FTP user with the given username already exists
+	 */
+	 const FTP_USER_ALREADY_EXISTS = 420;
+
+	/**
+	 * @var int
+	 *   The FTP user could not be found
+	 */
+	 const FTP_USER_NOT_FOUND = 421;
+
+	/**
+	 * @var int
+	 *   The requested Single Sign-On service could not be found
+	 */
+	 const SSO_SERVICE_NOT_FOUND = 430;
+
+	/**
+	 * @var int
+	 *   The given user already has a token for the given Single Sign-On service
+	 */
+	 const USER_ALREADY_HAS_SSO_TOKEN = 431;
+
+	/**
+	 * @var int
+	 *   The given user has no token for the given Single Sign-On service
+	 */
+	 const USER_HAS_NO_SSO_TOKEN = 432;
+
+	/**
+	 * @var int
+	 *   The given SSO response is invalid
+	 */
+	 const SSO_RESPONSE_INVALID = 433;
+
+	/**
+	 * @var int
+	 *   The given SSO token is unknown
+	 */
+	 const SSO_TOKEN_UNKNOWN = 434;
+
+	/**
+	 * @var int
+	 *   The requested item has no poster archive
+	 */
+	 const ITEM_NO_POSTER_ARCHIVE = 440;
+
+	/**
+	 * @var int
+	 *   The specified poster index is not present in the poster archive
+	 */
+	 const ITEM_POSTER_INDEX_NOT_FOUND = 441;
+
 }

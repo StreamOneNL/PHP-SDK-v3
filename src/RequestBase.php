@@ -286,7 +286,8 @@ abstract class RequestBase
 	 * @param string $argument
 	 *   The name of the argument
 	 * @param string $value
-	 *   The new value for the argument; null will be translated to an empty string
+	 *   The new value for the argument; null will be translated to an empty string and an array
+	 *   will be joined by comma's
 	 * @return RequestBase
 	 *   A reference to this object, to allow chaining
 	 */
@@ -295,6 +296,10 @@ abstract class RequestBase
 		if ($value === null)
 		{
 			$value = '';
+		}
+		elseif (is_array($value))
+		{
+			$value = implode(',', $value);
 		}
 		$this->arguments[$argument] = $value;
 		
