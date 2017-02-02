@@ -57,7 +57,31 @@ To use the StreamOne SDK, you should first set up a configuration and afterwards
 
 ### Configuration
 
-To set up a configuration, you should initialize the `StreamOne\API\v3\Config` with the desired configuration:
+To set up a configuration, you should initialize the `StreamOne\API\v3\Config` with the required configuration options:
+* **api_url** (required): this should be the base URL of the API to use. For example: `https://api.streamonecloud.net`.
+* **authentication_type** (required): this should be either `user` or `application` and denotes the type of authentication to use.
+
+For **authentication_type** `user` the following is required:
+* **user_id** and **user_psk**: these should contain the ID and preshared key of the user to use for authentication.
+
+For **authentication_type** `application` the following is required:
+* **application_id** and **application_psk**: these should contain the ID and preshared key of the application to use for authentication.
+
+In addition, the following optional values can be used:
+* **default_account_id** (optional): this can be set to the ID of an account and if set, this will be the account to use by default for all API actions.
+* **visible_errors** (optional, defaults to `[2,3,4,5,7]`): a list of all error codes to display prominently. All possible errors are defined in `Status.php`.
+* **request_factory** (optional, defaults to `StreamOne\API\v3\RequestFactory`): factory to use for creating requests. If you want to overwrite it you can pass an implementation of `StreamOne\API\v3\RequestFactoryInterface` here.
+* **cache** (optional, defaults to `StreamOne\API\v3\NoopCache`): cache to use for both requests and tokens. Should be an implementation of `StreamOne\API\v3\CacheInterface`.
+* **request_cache** (optional, defaults to `StreamOne\API\v3\NoopCache`): cache to use for requests. Overwrites anything set for **cache** and should also be an implementation of `StreamOne\API\v3\CacheInterface`.
+* **token_cache** (optional, defaults to `StreamOne\API\v3\NoopCache`): cache to use for tokens. Overwrites anything set for **cache** and should also be an implementation of `StreamOne\API\v3\CacheInterface`.
+* **use_session_for_token_cache** (optional, defaults to `true`): if `true`, the session will be used to store token information if using a session. Otherwise the **token_cache** will always be used.
+* **session_store** (optional, defaults to `StreamOne\API\v3\PhpSessionStore`): the session store to use to store session information and optionally token information (if **use_session_for_token_cache** is set to `true`).
+
+Note that for **request_factory**, **cache**, **request_cache**, **token_cache** and **session_store** you can either pass an instance of an object implementing the required interface or an array of values where the first element should be the full class name (including namespace) and the other arguments will be passed to the constructor of that class.
+
+> If you have forgotten your **user_psk** or **application_psk** you may reset it via the [StreamOne Manager](https://manager.streamonecloud.net/resetpsk)
+
+An example configuration is as follows:
 
 ```php
 <?php
@@ -67,26 +91,13 @@ require_once('vendor/autoload.php');
 use StreamOne\API\v3\Config;
 
 $config = new Config(array(
-	...
+    'api_url' => 'https://api.streamonecloud.net',
+    'authentication_type' => 'user',
+    'user_id' => 'abcdefghijkl',
+    'user_psk' => 'abcdefghijklmnopqrstuvwxyzABCDEF',
+    'default_account_id' => '',
 ));
 ```
-
-The following configuration options are available:
-
-* **api_url** (required): this should be the base URL of the API to use. For example: `https://api.streamonecloud.net`.
-* **authentication_type** (required): this should be either `user` or `application` and denotes the type of authentication to use.
-* **user_id** and **user_psk** (required if **authentication_type** is `user`): these should contain the ID and preshared key of the user to use for authentication.
-* **application_id** and **application_psk** (required if **authentication_type** is `application`): these should contain the ID and preshared key of the application to use for authentication.
-* **default_account_id** (optional): this can be set to the ID of an account and if set, this will be the account to use by default for all API actions.
-* **visible_errors** (optional, defaults to `[2,3,4,5,7]`): a list of all error codes to display prominently. All possible errors are defined in `Status.php`.
-* **request_factory** (optional, defaults to a `StreamOne\API\v3\RequestFactory`): factory to use for creating requests. If you want to overwrite it you can pass an implementation of `StreamOne\API\v3\RequestFactoryInterface` here.
-* **cache** (optional, defaults to a `StreamOne\API\v3\NoopCache`): cache to use for both requests and tokens. Should be an implementation of `StreamOne\API\v3\CacheInterface`.
-* **request_cache** (optional, defaults to a `StreamOne\API\v3\NoopCache`): cache to use for requests. Overwrites anything set for **cache** and should also be an implementation of `StreamOne\API\v3\CacheInterface`.
-* **token_cache** (optional, defaults to a `StreamOne\API\v3\NoopCache`): cache to use for tokens. Overwrites anything set for **cache** and should also be an implementation of `StreamOne\API\v3\CacheInterface`.
-* **use_session_for_token_cache** (optional, defaults to `true`): if `true`, the session will be used to store token information if using a session. Otherwise the **token_cache** will always be used.
-* **session_store** (optional, defaults to a `StreamOne\API\v3\PhpSessionStore`): the session store to use to store session information and optionally token information (if **use_session_for_token_cache** is set to `true`).
-
-Note that for **request_factory**, **cache**, **request_cache**, **token_cache** and **session_store** you can either pass an instance of an object implementing the required interface or an array of values where the first element should be the full class name (including namespace) and the other arguments will be passed to the constructor of that class.
 
 ### Platform
 
@@ -97,6 +108,9 @@ Example:
 ```php
 <?php
 
+require_once('vendor/autoload.php');
+
+use StreamOne\API\v3\Config;
 use StreamOne\API\v3\Platform;
 
 $config = ... // As above
@@ -142,13 +156,19 @@ An example API request:
 ```php
 <?php
 
+require_once('vendor/autoload.php');
+
+use StreamOne\API\v3\Config;
+use StreamOne\API\v3\Platform;
 use StreamOne\API\v3\RequestException;
 
+$config = ... // As above
 $platform = ... // As above
 
 $request = $platform->newRequest('item', 'view');
 $request
 	->setArgument('itemtype', 'video')
+	->setAccount('ACCOUNT')
 	->execute();
 
 if ($request->success())
@@ -167,7 +187,9 @@ else
 
 ### Session
 
-A Session can be used in the StreamOne platform by an application to perform API actions on behalf of a user.
+> NOTE: Session requests are only required when authentication_type is set to application.  It is not required when authentication_type is user
+
+A Session can be used in the StreamOne platform by an *application* to perform API actions on behalf of a user.
 
 To use a session, you need to authenticate as an application (by setting **authentication_type** to `application`).
 Then you can use the `StreamOne\API\v3\Session` class to start a session and to perform actions using that session.
@@ -186,8 +208,13 @@ An example of using a session:
 ```php
 <?php
 
+require_once('vendor/autoload.php');
+
+use StreamOne\API\v3\Config;
+use StreamOne\API\v3\Platform;
 use StreamOne\API\v3\RequestException;
 
+$config = ... // As above
 $platform = ... // As above
 
 $session = $platform->newSession();
@@ -209,21 +236,29 @@ It can be used to perform multiple requests with the same settings, like account
 Actors can also be used to check if the required tokens for an API action are available for the given actor.
 The system will request tokens from the API when required and it will cache this information so this is not done for every request. The **token_cache** from the Config will be used to store this information.
 
+> A full list of tokens can be found at https://manager.streamonecloud.net/docs/api_v3/tokens
+
 An example of using an actor:
 
 ```php
 <?php
 
+require_once('vendor/autoload.php');
+
+use StreamOne\API\v3\Config;
+use StreamOne\API\v3\Platform;
+
+$config = ... // As above
 $platform = ... // As above
 
 $actor = $platform->newActor();
 // or
-$session = ... // As above
-$actor = $platform->newActor($session);
+// $session = ... // As above
+// $actor = $platform->newActor($session);
 
-$actor->setAccount('abcdef');
+$actor->setAccount('ACCOUNT');
 
-if ($actor->hasToken('item', 'view'))
+if ($actor->hasToken('item-read'))
 {
 	$request = $actor->newRequest('item', 'view');
 	// etc
@@ -245,19 +280,21 @@ There are more classes available in the StreamOne SDK:
 ```php
 <?php
 
+require_once('vendor/autoload.php');
+
 use StreamOne\API\v3\Config;
 use StreamOne\API\v3\Platform;
 use StreamOne\API\v3\RequestException;
-
-require_once('vendor/autoload.php');
 
 $config = new Config(array(
 	'api_url' => 'https://api.streamonecloud.net',
 	'authentication_type' => 'user',
 	'user_id' => 'abcdefghijkl',
 	'user_psk' => 'abcdefghijklmnopqrstuvwxyzABCDEF',
-	'default_account_id' => 'mnopqrstuvwx',
+	'default_account_id' => '',
 ));
+
+$platform = new Platform($config);
 
 $request = $platform->newRequest('api', 'info');
 
@@ -272,10 +309,43 @@ else
 	throw RequestException::fromRequest($request);
 }
 
+$request = $platform->newRequest('item', 'view');
+$request
+    ->setArgument('itemtype', 'video')
+    ->setAccount('ACCOUNT')
+    ->execute();
+
+if ($request->success())
+{
+    var_dump($request->body());
+}
+else
+{
+    throw RequestException::fromRequest($request);
+}
+
+
+$actor = $platform->newActor();
+
+$actor->setAccount('ACCOUNT');
+
+# A full list of tokens can be found at https://manager.streamonecloud.net/docs/api_v3/tokens
+if ($actor->hasToken('item-read'))
+{
+    $request = $actor->newRequest('item', 'view');
+    // etc
+}
+else
+{
+    echo "Actor does not have access to this token";
+}
+
+
+
 ```
 
 ## License and copyright
 
 All source code is licensed under the [MIT License](LICENSE).
 
-Copyright (c) 2014-2015 [StreamOne B.V.](http://streamone.nl)
+Copyright (c) 2014-2017 [StreamOne B.V.](http://streamone.tv)
